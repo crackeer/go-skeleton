@@ -1,0 +1,10 @@
+port: 9000
+default_page_size: 20
+env: "develop"
+database:
+  - driver: "sqlite"
+    file: "d:/github/sqlite3.db"
+redis:
+  - host: "localhost:6379"
+    password: ""
+    db: 0 
