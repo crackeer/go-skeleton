@@ -2,7 +2,10 @@ package server
 
 import (
 	"fmt"
-	"go-skeleton/api"
+	"net/http"
+
+	"github.com/crackeer/go-skeleton/api"
+	"github.com/crackeer/go-skeleton/container"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,8 +14,9 @@ import (
 //
 //	@param config
 //	@return error
-func Run(port int64) error {
+func Run(config *container.AppConfig) error {
 	router := gin.New()
 	router.GET("/hello", api.Hello)
-	return router.Run(fmt.Sprintf(":%d", port))
+	router.StaticFS("/public", http.Dir(config.PublicDir))
+	return router.Run(fmt.Sprintf(":%d", config.Port))
 }

@@ -1,4 +1,4 @@
-module go-skeleton
+module github.com/crackeer/go-skeleton
 
 go 1.24.0
 

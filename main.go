@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"go-skeleton/container"
-	"go-skeleton/server"
+	"github.com/crackeer/go-skeleton/container"
+	"github.com/crackeer/go-skeleton/server"
 )
 
 var configPath string
@@ -33,7 +33,7 @@ func main() {
 	errChan := make(chan error)
 
 	go func() {
-		err := server.Run(appConfig.Port)
+		err := server.Run(appConfig)
 		errChan <- err
 	}()
 

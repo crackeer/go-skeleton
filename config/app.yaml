@@ -1,6 +1,7 @@
 port: 9000
 default_page_size: 20
 env: "develop"
+public_dir: "./public"
 database:
   - driver: "sqlite"
     file: "d:/github/sqlite3.db"

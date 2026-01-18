@@ -25,6 +25,7 @@ type DatabaseConfig struct {
 type AppConfig struct {
 	Port            int64            `yaml:"port"`
 	DefaultPageSize int64            `yaml:"default_page_size"`
+	PublicDir       string           `yaml:"public_dir"`
 	Env             string           `yaml:"env"`
 	Database        []DatabaseConfig `yaml:"database"`
 	Redis           []RedisConfig    `yaml:"redis"`

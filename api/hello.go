@@ -1,7 +1,7 @@
 package api
 
 import (
-	"go-skeleton/util"
+	"github.com/crackeer/go-skeleton/util"
 
 	"github.com/gin-gonic/gin"
 )
