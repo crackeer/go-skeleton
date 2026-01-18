@@ -3,6 +3,7 @@ package resource
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -100,7 +101,7 @@ func (d *FTPDriver) List(path string) ([]Entry, error) {
 }
 
 // Read 读取指定文件的内容
-func (d *FTPDriver) Read(path string) ([]byte, error) {
+func (d *FTPDriver) Read(path string) (io.Reader, error) {
 	// 建立FTP连接
 	conn, err := d.connect()
 	if err != nil {
@@ -122,7 +123,7 @@ func (d *FTPDriver) Read(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	return buf, nil
 }
 
 // makeDirAll 递归创建目录结构
@@ -155,7 +156,7 @@ func (d *FTPDriver) makeDirAll(conn *ftp.ServerConn, dir string) error {
 }
 
 // Write 将数据写入指定文件
-func (d *FTPDriver) Write(path string, data []byte) error {
+func (d *FTPDriver) Write(path string, data io.Reader) error {
 	// 建立FTP连接
 	conn, err := d.connect()
 	if err != nil {
@@ -172,7 +173,7 @@ func (d *FTPDriver) Write(path string, data []byte) error {
 	}
 
 	// 写入文件
-	return conn.Stor(path, bytes.NewReader(data))
+	return conn.Stor(path, data)
 }
 
 // Detail 获取指定路径的详细信息

@@ -12,6 +12,7 @@ resource:
       dir: "./"
   - driver: "s3"
     name: "s3"
+    title: "S3对象存储"
     s3_config:
       bucket: "test"
       region: "us-east-1"
@@ -20,6 +21,7 @@ resource:
       endpoint: "http://localhost:9000"
   - driver: "ftp"
     name: "ftp"
+    title: "FTP文件系统"
     ftp_config:
       host: "localhost"
       port: 21

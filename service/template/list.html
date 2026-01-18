@@ -105,7 +105,7 @@
             <td>
                 <span class="{{ entry.Type }}">
                     {% if entry.Type == "dir" %}📁 {% else %}📄 {% endif %}
-                     {% if entry.Type == "dir" %} <a href="/{{ url }}/{{ entry.Name }}">{{ entry.Name }}</a> {% else %}{{ entry.Name }}{% endif %}
+                    <a href="/{{ url }}/{{ entry.Name }}">{{ entry.Name }}</a>
                 </span>
                
             </td>
@@ -129,8 +129,6 @@
         const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
         window.location.href = window.location.origin + parentPath;
     }
-
-  
 
     // 文件删除功能
     function deleteItem(name, type) {
@@ -220,22 +218,17 @@
                 if (!response.ok) {
                     throw new Error(`上传失败: ${response.statusText}`);
                 }
-                return response.json();
+                return response.text();
             })
             .then(data => {
-                if (data.code === 0) {
-                    // 更新文件状态为成功
-                    const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                    const fileElement = document.getElementById(fileId);
-                    if (fileElement) {
-                        fileElement.className = 'loading-file success';
-                        fileElement.innerHTML = `✅ 上传成功: ${file.name}`;
-                    }
-                } else {
-                    throw new Error(`上传失败: ${data.message || '未知错误'}`);
+                // 更新文件状态为成功
+                const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                const fileElement = document.getElementById(fileId);
+                if (fileElement) {
+                    fileElement.className = 'loading-file success';
+                    fileElement.innerHTML = `✅ 上传成功: ${file.name}`;
                 }
-            })
-            .catch(error => {
+            }).catch(error => {
                 // 更新文件状态为失败
                 const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 const fileElement = document.getElementById(fileId);

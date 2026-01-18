@@ -1,5 +1,7 @@
 package resource
 
+import "io"
+
 type Entry struct {
 	Name       string `json:"name"`
 	Size       int64  `json:"size"`
@@ -10,7 +12,7 @@ type Entry struct {
 type Resource interface {
 	List(string) ([]Entry, error)
 	Detail(string) (Entry, error)
-	Read(string) ([]byte, error)
-	Write(string, []byte) error
+	Read(string) (io.Reader, error)
+	Write(string, io.Reader) error
 	Delete(string) error
 }

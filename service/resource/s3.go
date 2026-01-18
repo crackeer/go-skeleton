@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"path/filepath"
@@ -102,7 +101,7 @@ func (d *S3Driver) List(path string) ([]Entry, error) {
 }
 
 // Read 读取指定对象的内容
-func (d *S3Driver) Read(path string) ([]byte, error) {
+func (d *S3Driver) Read(path string) (io.Reader, error) {
 	// 获取对象
 	resp, err := d.Client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(d.Bucket),
@@ -113,22 +112,16 @@ func (d *S3Driver) Read(path string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	// 读取对象内容
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
+	return resp.Body, nil
 }
 
 // Write 将数据写入指定对象
-func (d *S3Driver) Write(path string, data []byte) error {
+func (d *S3Driver) Write(path string, data io.Reader) error {
 	// 写入对象
 	_, err := d.Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(d.Bucket),
 		Key:    aws.String(path),
-		Body:   bytes.NewReader(data),
+		Body:   data,
 	})
 	if err != nil {
 		return err

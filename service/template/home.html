@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源列表</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .resource-list {
+            margin-top: 20px;
+        }
+        .resource-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease;
+        }
+        .resource-item:hover {
+            background-color: #f0f8ff;
+        }
+        .resource-item a {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .resource-item a:hover {
+            text-decoration: underline;
+        }
+        .resource-info {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        .resource-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .type-local {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+        .type-s3 {
+            background-color: #fff1f0;
+            color: #ff4d4f;
+        }
+        .type-ftp {
+            background-color: #f6ffed;
+            color: #52c41a;
+        }
+    </style>
+</head>
+<body>
+    <h1>资源列表</h1>
+    <div class="resource-list">
+        {% for resource in resources %}
+        <div class="resource-item">
+            <a href="/{{ resource.Name }}">
+                {{ resource.Title }}
+                <span class="resource-type type-{{ resource.Driver }}">{{ resource.Driver }}</span>
+            </a>
+            <div class="resource-info">
+                {% if resource.Driver == "local" %}
+                    目录: {{ resource.LocalConfig.Dir }}
+                {% elif resource.Driver == "s3" %}
+                    存储桶: {{ resource.S3Config.Endpoint }} / {{ resource.S3Config.Bucket }}
+                {% elif resource.Driver == "ftp" %}
+                    FTP服务器: {{ resource.FTPConfig.Host }}:{{ resource.FTPConfig.Port }} / 路径: {{ resource.FTPConfig.RelativePath }}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

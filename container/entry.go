@@ -15,6 +15,12 @@ const (
 	DriverFTP = "ftp"
 )
 
+const (
+	EntryTypeFile = "file"
+
+	EntryTypeFolder = "folder"
+)
+
 type LocalConfig struct {
 	Dir string
 }

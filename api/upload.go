@@ -1,9 +1,8 @@
 package api
 
 import (
+	"net/http"
 	"strings"
-
-	"github.com/crackeer/go-connect/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,37 +14,29 @@ func Upload(ctx *gin.Context) {
 	// 获取上传的文件
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		util.Failure(ctx, -1, "获取文件失败: "+err.Error())
+		ctx.String(http.StatusBadRequest, "获取文件失败: "+err.Error())
 		return
 	}
 
 	// 打开文件
 	src, err := file.Open()
 	if err != nil {
-		util.Failure(ctx, -1, "打开文件失败: "+err.Error())
+		ctx.String(http.StatusBadRequest, "打开文件失败: "+err.Error())
 		return
 	}
 	defer src.Close()
 
-	// 创建文件内容缓冲区
-	buffer := make([]byte, file.Size)
-	_, err = src.Read(buffer)
-	if err != nil {
-		util.Failure(ctx, -1, "读取文件失败: "+err.Error())
-		return
-	}
-
 	// 获取驱动配置
 	driverConfig, err := GetDriverConfig(driverName)
 	if err != nil {
-		util.Failure(ctx, -1, "获取驱动配置失败: "+err.Error())
+		ctx.String(http.StatusBadRequest, "获取驱动配置失败: "+err.Error())
 		return
 	}
 
 	// 创建资源客户端
 	client, err := NewResourceClient(driverConfig)
 	if err != nil {
-		util.Failure(ctx, -1, "创建客户端失败: "+err.Error())
+		ctx.String(http.StatusBadRequest, "创建客户端失败: "+err.Error())
 		return
 	}
 
@@ -53,11 +44,11 @@ func Upload(ctx *gin.Context) {
 	path := ctx.Param("path")
 
 	// 写入文件
-	err = client.Write(strings.Trim(path, "/"), buffer)
+	err = client.Write(strings.Trim(path, "/"), src)
 	if err != nil {
-		util.Failure(ctx, -1, "写入文件失败: "+err.Error())
+		ctx.String(http.StatusBadRequest, "写入文件失败: "+err.Error())
 		return
 	}
 
-	util.Success(ctx, gin.H{"message": "文件上传成功"})
+	ctx.String(http.StatusOK, "文件上传成功")
 }

@@ -2,6 +2,7 @@ package resource
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -50,13 +51,13 @@ func (d *LocalDriver) List(path string) ([]Entry, error) {
 }
 
 // Read 读取指定文件的内容
-func (d *LocalDriver) Read(path string) ([]byte, error) {
+func (d *LocalDriver) Read(path string) (io.Reader, error) {
 	fullPath := filepath.Join(d.RootDir, path)
-	return os.ReadFile(fullPath)
+	return os.Open(fullPath)
 }
 
 // Write 将数据写入指定文件
-func (d *LocalDriver) Write(path string, data []byte) error {
+func (d *LocalDriver) Write(path string, data io.Reader) error {
 	fullPath := filepath.Join(d.RootDir, path)
 
 	// 确保目录结构存在
@@ -66,7 +67,17 @@ func (d *LocalDriver) Write(path string, data []byte) error {
 	}
 
 	// 写入文件
-	return os.WriteFile(fullPath, data, 0644)
+	out, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if _, err := io.Copy(out, data); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Detail 获取指定路径的详细信息
