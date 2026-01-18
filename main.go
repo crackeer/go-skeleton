@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/crackeer/go-skeleton/container"
-	"github.com/crackeer/go-skeleton/server"
+	"github.com/crackeer/go-connect/container"
+	"github.com/crackeer/go-connect/server"
 )
 
 var configPath string

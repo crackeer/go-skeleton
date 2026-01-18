@@ -7,36 +7,55 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type DatabaseConfig struct {
-	Name          string `yaml:"name"`
-	Driver        string `yaml:"driver"`
-	File          string `yaml:"file,omitempty"`
-	WriteHost     string `yaml:"write_host,omitempty"`
-	ReadHost      string `yaml:"read_host,omitempty"`
-	WriteUser     string `yaml:"write_user,omitempty"`
-	ReadUser      string `yaml:"read_user,omitempty"`
-	WritePassword string `yaml:"write_password,omitempty"`
-	ReadPassword  string `yaml:"read_password,omitempty"`
-	Charset       string `yaml:"charset,omitempty"`
-	Database      string `yaml:"database,omitempty"`
+const (
+	DriverLocal = "local"
+
+	DriverS3 = "s3"
+
+	DriverFTP = "ftp"
+)
+
+type LocalConfig struct {
+	Dir string
+}
+
+type S3Config struct {
+	Bucket    string `yaml:"bucket"`
+	Region    string `yaml:"region"`
+	AccessKey string `yaml:"access_key"`
+	SecretKey string `yaml:"secret_key"`
+	Endpoint  string `yaml:"endpoint"`
+}
+
+type FTPConfig struct {
+	Host         string `yaml:"host"`
+	Port         int64  `yaml:"port"`
+	User         string `yaml:"user"`
+	Password     string `yaml:"password"`
+	RelativePath string `yaml:"relative_path"`
+}
+
+type DriverConfig struct {
+	Driver      string      `yaml:"driver"`
+	Name        string      `yaml:"name"`
+	LocalConfig LocalConfig `yaml:"local_config"`
+	S3Config    S3Config    `yaml:"s3_config"`
+	FTPConfig   FTPConfig   `yaml:"ftp_config"`
+	Title       string      `yaml:"title"`
+}
+
+type User struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 // AppConfig Config
 type AppConfig struct {
-	Port            int64            `yaml:"port"`
-	DefaultPageSize int64            `yaml:"default_page_size"`
-	PublicDir       string           `yaml:"public_dir"`
-	Env             string           `yaml:"env"`
-	Database        []DatabaseConfig `yaml:"database"`
-	Redis           []RedisConfig    `yaml:"redis"`
-}
-
-type RedisConfig struct {
-	Name     string `yaml:"name"`
-	Host     string `yaml:"host"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	DB       int    `yaml:"db"`
+	Port            int64          `yaml:"port"`
+	Env             string         `yaml:"env"`
+	DefaultPageSize int64          `yaml:"default_page_size"`
+	User            []User         `yaml:"user"`
+	Resource        []DriverConfig `yaml:"resource"`
 }
 
 var appConfig *AppConfig
@@ -49,11 +68,6 @@ func Init(configPath string) (*AppConfig, error) {
 	appConfig = &AppConfig{}
 	if err := loadYaml(configPath, appConfig); err != nil {
 		return nil, fmt.Errorf("load app config error: %s", err.Error())
-	}
-	if len(appConfig.Database) > 0 {
-		if err := initDatabase(appConfig.Database); err != nil {
-			return nil, fmt.Errorf("init database connection error: %s", err.Error())
-		}
 	}
 	return appConfig, nil
 }
@@ -72,5 +86,11 @@ func loadYaml(path string, dest interface{}) error {
 	}
 
 	return yaml.Unmarshal(bytes, dest)
+}
 
+// IsDevelop ...
+//
+//	@return bool
+func IsDevelop() bool {
+	return appConfig.Env == "develop"
 }

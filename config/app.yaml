@@ -1,11 +1,28 @@
 port: 9000
 default_page_size: 20
 env: "develop"
-public_dir: "./public"
-database:
-  - driver: "sqlite"
-    file: "d:/github/sqlite3.db"
-redis:
-  - host: "localhost:6379"
-    password: ""
-    db: 0 
+user:
+  - name: "admin"
+    password: "admin"
+resource:
+  - driver: "local"
+    name: "local"
+    title: "本地文件系统"
+    local_config:
+      dir: "./"
+  - driver: "s3"
+    name: "s3"
+    s3_config:
+      bucket: "test"
+      region: "us-east-1"
+      access_key: "test"
+      secret_key: "test"
+      endpoint: "http://localhost:9000"
+  - driver: "ftp"
+    name: "ftp"
+    ftp_config:
+      host: "localhost"
+      port: 21
+      user: "test"
+      password: "test"
+      relative_path: "/"
