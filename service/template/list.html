@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,34 +8,44 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            margin: 20px;
+
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
         .dir {
             color: #0066cc;
             font-weight: bold;
         }
+
         .file {
             color: #333;
         }
+
         .time {
             font-family: monospace;
         }
+
         /* Loading浮层样式 */
         .loading-overlay {
             position: fixed;
@@ -42,12 +53,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.55); /* 透明度45% */
+            background-color: rgba(255, 255, 255, 0.55);
+            /* 透明度45% */
             z-index: 9999;
             display: none;
             justify-content: center;
             align-items: center;
         }
+
         .loading-content {
             background-color: white;
             padding: 20px 40px;
@@ -57,41 +70,51 @@
             max-height: 80%;
             overflow-y: auto;
         }
+
         .loading-title {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
             color: #333;
         }
+
         .loading-file {
             margin: 5px 0;
             padding: 5px;
             border-radius: 4px;
         }
+
         .loading-file.uploading {
             background-color: #f0f8ff;
             color: #0066cc;
         }
+
         .loading-file.success {
             background-color: #f0fff0;
             color: #008000;
         }
+
         .loading-file.error {
             background-color: #fff0f0;
             color: #ff0000;
         }
+         h1 {
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
     </style>
 </head>
+
 <body>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>{{ title }}</h1>
-        <a href="/" style="text-decoration: none; color: #0066cc; font-size: 16px; padding: 5px 10px; border: 1px solid #0066cc; border-radius: 4px;">返回首页</a>
-    </div>
+    <h1>{{ title }}  <a href="/"
+            style="text-decoration: none; color: #0066cc; font-size: 16px; padding: 5px 10px; border: 1px solid #0066cc; border-radius: 4px;">返回首页</a></h1>
     <!-- 顶部导航栏 -->
-    <div style="display: flex; justify-content: space-between; align-items: center; ">
-        <div>{{ path }}  <small><button onclick="goToParentDirectory()">上一级</button></small></div>
-        <!-- 文件上传区域 -->
-        <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div>{{ path }} <small><button onclick="goToParentDirectory()">上一级</button></small></div>
+        <!-- 文件上传和批量删除区域 -->
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button onclick="batchDelete()" id="batchDeleteBtn" disabled style="cursor: pointer;">批量删除</button>
             <input type="file" id="fileInput" style="display: none;" multiple onchange="uploadFiles()">
             <button onclick="document.getElementById('fileInput').click()">上传文件</button>
         </div>
@@ -99,6 +122,9 @@
 
     <table>
         <tr>
+            <th style="width: 30px;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+            </th>
             <th>名称</th>
             <th class="size">大小</th>
             <th>修改时间</th>
@@ -107,17 +133,20 @@
         {% for entry in entries %}
         <tr>
             <td>
+                <input type="checkbox" class="itemCheckbox" data-name="{{ entry.Name }}" data-type="{{ entry.Type }}" onchange="toggleItemSelection()">
+            </td>
+            <td>
                 <span class="{{ entry.Type }}">
                     {% if entry.Type == "dir" %}📁 {% else %}📄 {% endif %}
                     <a href="/{{ url }}/{{ entry.Name }}">{{ entry.Name }}</a>
                 </span>
-               
             </td>
             <td class="size">{{ entry.Size }}</td>
-            <td class="time">{{ entry.ModifyTime  }}</td>
+            <td class="time">{{ entry.ModifyTime }}</td>
             <td>
-             <button onclick="deleteItem('{{ entry.Name }}', '{{ entry.Type }}')" style=" cursor: pointer;">删除</button>
-            </th>
+                <button onclick="deleteItem('{{ entry.Name }}', '{{ entry.Type }}')"
+                    style="cursor: pointer;">删除</button>
+            </td>
         </tr>
         {% endfor %}
     </table>
@@ -128,135 +157,268 @@
         </div>
     </div>
     <script>
-    function goToParentDirectory() {
-        const path = window.location.pathname.replace(/\/+$/, '');
-        const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
-        window.location.href = window.location.origin + parentPath;
-    }
-
-    // 文件删除功能
-    function deleteItem(name, type) {
-        // 确认删除
-        if (!confirm(`确定要删除${type === 'dir' ? '目录' : '文件'} "${name}"吗？`)) {
-            return;
+        function goToParentDirectory() {
+            const path = window.location.pathname.replace(/\/+$/, '');
+            const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
+            window.location.href = window.location.origin + parentPath;
         }
 
-        // 获取当前路径信息
-        const path = window.location.pathname.replace(/\/+$/, '');
-        
-        // 构造删除URL：当前URL + 文件名
-        const deleteUrl = `${path}/${name}`;
-        
-        fetch(deleteUrl, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`删除失败: ${response.statusText}`);
+        // 文件删除功能
+        function deleteItem(name, type) {
+            // 确认删除
+            if (!confirm(`确定要删除${type === 'dir' ? '目录' : '文件'} "${name}"吗？`)) {
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.code === 0) {
-                alert('删除成功');
-                // 刷新页面
-                window.location.reload();
+
+            // 获取当前路径信息
+            const path = window.location.pathname.replace(/\/+$/, '');
+
+            // 构造删除URL：当前URL + 文件名
+            const deleteUrl = `${path}/${name}`;
+
+            fetch(deleteUrl, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`删除失败: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.code === 0) {
+                        alert('删除成功');
+                        // 刷新页面
+                        window.location.reload();
+                    } else {
+                        throw new Error(`删除失败: ${data.message || '未知错误'}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`删除失败: ${error.message}`);
+                });
+        }
+
+        // 全选/取消全选功能
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const itemCheckboxes = document.querySelectorAll('.itemCheckbox');
+            
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateBatchDeleteButton();
+        }
+
+        // 单个项目选择状态改变时更新批量删除按钮状态
+        function toggleItemSelection() {
+            updateBatchDeleteButton();
+        }
+
+        // 更新批量删除按钮状态
+        function updateBatchDeleteButton() {
+            const itemCheckboxes = document.querySelectorAll('.itemCheckbox:checked');
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+            
+            if (itemCheckboxes.length > 0) {
+                batchDeleteBtn.disabled = false;
+                batchDeleteBtn.style.cursor = 'pointer';
+                batchDeleteBtn.style.opacity = '1';
             } else {
-                throw new Error(`删除失败: ${data.message || '未知错误'}`);
+                batchDeleteBtn.disabled = true;
+                batchDeleteBtn.style.cursor = 'not-allowed';
+                batchDeleteBtn.style.opacity = '0.5';
             }
-        })
-        .catch(error => {
-            alert(`删除失败: ${error.message}`);
-        });
-    }
-    
-
-    
-
-    // 文件上传功能
-    function uploadFiles() {
-        const fileInput = document.getElementById('fileInput');
-        const files = fileInput.files;
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingFiles = document.getElementById('loadingFiles');
-        const path = window.location.pathname.replace(/\/+$/, '');
-
-        if (files.length === 0) {
-            alert('请先选择文件');
-            return;
         }
 
-        // 显示Loading浮层
-        loadingOverlay.style.display = 'flex';
-        loadingFiles.innerHTML = '';
+        // 批量删除功能
+        function batchDelete() {
+            const itemCheckboxes = document.querySelectorAll('.itemCheckbox:checked');
+            const selectedItems = Array.from(itemCheckboxes).map(checkbox => ({
+                name: checkbox.dataset.name,
+                type: checkbox.dataset.type
+            }));
+            
+            if (selectedItems.length === 0) {
+                alert('请先选择要删除的文件或目录');
+                return;
+            }
+            
+            // 确认删除
+            const confirmMessage = `确定要删除以下${selectedItems.length}个项目吗？\n${selectedItems.map(item => `${item.type === 'dir' ? '目录' : '文件'}: ${item.name}`).join('\n')}`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // 获取当前路径信息
+            const path = window.location.pathname.replace(/\/+$/, '');
+            
+            // 显示Loading浮层
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingFiles = document.getElementById('loadingFiles');
+            
+            loadingOverlay.style.display = 'flex';
+            loadingFiles.innerHTML = '';
+            loadingOverlay.querySelector('.loading-title').textContent = '文件删除中';
+            
+            // 初始化所有文件的删除状态
+            selectedItems.forEach(item => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'loading-file uploading';
+                fileElement.id = `loading_${item.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                fileElement.innerHTML = `⌛ 等待删除中: ${item.name}`;
+                loadingFiles.appendChild(fileElement);
+            });
+            
+            // 记录已完成的项目数量
+            let completedItems = 0;
+            const total = selectedItems.length;
+            
+            // 逐个删除项目
+            selectedItems.forEach((item) => {
+                // 构造删除URL：当前URL + 文件名
+                const deleteUrl = `${path}/${item.name}`;
+                
+                // 更新项目状态为删除中
+                const itemId = `loading_${item.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                const itemElement = document.getElementById(itemId);
+                itemElement.innerHTML = `正在删除: ${item.name}`;
+                
+                fetch(deleteUrl, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`删除失败: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.code !== 0) {
+                            throw new Error(`删除失败: ${data.message || '未知错误'}`);
+                        }
+                        
+                        // 更新项目状态为成功
+                        const itemId = `loading_${item.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const itemElement = document.getElementById(itemId);
+                        if (itemElement) {
+                            itemElement.className = 'loading-file success';
+                            itemElement.innerHTML = `✅ 删除成功: ${item.name}`;
+                        }
+                    })
+                    .catch(error => {
+                        // 更新项目状态为失败
+                        const itemId = `loading_${item.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const itemElement = document.getElementById(itemId);
+                        if (itemElement) {
+                            itemElement.className = 'loading-file error';
+                            itemElement.innerHTML = `❌ 删除失败: ${item.name} (${error.message})`;
+                        }
+                    })
+                    .finally(() => {
+                        completedItems++;
+                        
+                        // 检查是否所有项目都已删除完成
+                        if (completedItems === total) {
+                            // 所有项目删除完成，1秒后刷新页面
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    });
+            });
+        }
 
-        // 初始化所有文件的上传状态
-        Array.from(files).forEach(file => {
-            const fileElement = document.createElement('div');
-            fileElement.className = 'loading-file uploading';
-            fileElement.id = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-            fileElement.innerHTML = `⌛ 等待上传中: ${file.name}`;
-            loadingFiles.appendChild(fileElement);
-        });
 
-        // 记录已完成的文件数量
-        let completedFiles = 0;
-        let total = files.length
 
-        // 逐个上传文件
-        Array.from(files).forEach((file) => {
-            const formData = new FormData();
-            formData.append('file', file);
 
-            // 构造上传URL：当前URL + 文件名
-            const uploadUrl = `${path}/${file.name}`;
-            // 更新文件状态为成功
-            const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-            const fileElement = document.getElementById(fileId);
-            fileElement.innerHTML = `正在上传: ${file.name}`;
-            fetch(uploadUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`上传失败: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(data => {
+        // 文件上传功能
+        function uploadFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingFiles = document.getElementById('loadingFiles');
+            const path = window.location.pathname.replace(/\/+$/, '');
+
+            if (files.length === 0) {
+                alert('请先选择文件');
+                return;
+            }
+
+            // 显示Loading浮层
+            loadingOverlay.style.display = 'flex';
+            loadingFiles.innerHTML = '';
+
+            // 初始化所有文件的上传状态
+            Array.from(files).forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'loading-file uploading';
+                fileElement.id = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                fileElement.innerHTML = `⌛ 等待上传中: ${file.name}`;
+                loadingFiles.appendChild(fileElement);
+            });
+
+            // 记录已完成的文件数量
+            let completedFiles = 0;
+            let total = files.length
+
+            // 逐个上传文件
+            Array.from(files).forEach((file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // 构造上传URL：当前URL + 文件名
+                const uploadUrl = `${path}/${file.name}`;
                 // 更新文件状态为成功
                 const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 const fileElement = document.getElementById(fileId);
-                if (fileElement) {
-                    fileElement.className = 'loading-file success';
-                    fileElement.innerHTML = `✅ 上传成功: ${file.name}`;
-                }
-            }).catch(error => {
-                // 更新文件状态为失败
-                const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                const fileElement = document.getElementById(fileId);
-                if (fileElement) {
-                    fileElement.className = 'loading-file error';
-                    fileElement.innerHTML = `❌ 上传失败: ${file.name} (${error.message})`;
-                }
-            })
-            .finally(() => {
-                completedFiles++;
-                console.log(completedFiles, files.length)
-                // 检查是否所有文件都已上传完成
-                if (completedFiles === total) {
-                    // 所有文件上传完成，1秒后刷新页面
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
-                }
+                fileElement.innerHTML = `正在上传: ${file.name}`;
+                fetch(uploadUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`上传失败: ${response.statusText}`);
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        // 更新文件状态为成功
+                        const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const fileElement = document.getElementById(fileId);
+                        if (fileElement) {
+                            fileElement.className = 'loading-file success';
+                            fileElement.innerHTML = `✅ 上传成功: ${file.name}`;
+                        }
+                    }).catch(error => {
+                        // 更新文件状态为失败
+                        const fileId = `loading_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const fileElement = document.getElementById(fileId);
+                        if (fileElement) {
+                            fileElement.className = 'loading-file error';
+                            fileElement.innerHTML = `❌ 上传失败: ${file.name} (${error.message})`;
+                        }
+                    })
+                    .finally(() => {
+                        completedFiles++;
+                        console.log(completedFiles, files.length)
+                        // 检查是否所有文件都已上传完成
+                        if (completedFiles === total) {
+                            // 所有文件上传完成，1秒后刷新页面
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    });
             });
-        });
 
-        // 清空文件选择
-        fileInput.value = '';
-    }
+            // 清空文件选择
+            fileInput.value = '';
+        }
     </script>
 </body>
+
 </html>

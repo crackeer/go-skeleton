@@ -23,8 +23,8 @@ resource:
     name: "ftp"
     title: "FTP文件系统"
     ftp_config:
-      host: "localhost"
-      port: 21
-      user: "test"
-      password: "test"
+      host: "10.33.207.152"
+      port: 8090
+      user: "ftpuser"
+      password: "ftpuser"
       relative_path: "/"

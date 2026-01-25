@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/crackeer/go-connect/service/template"
@@ -22,19 +23,14 @@ func Get(ctx *gin.Context) {
 		ctx.String(http.StatusOK, err.Error())
 		return
 	}
-	detail, err := client.Detail(path)
-	if err != nil {
-		ctx.String(http.StatusOK, err.Error())
-		return
-	}
-	if detail.Type == "file" {
+	if ctx.Query("download") == "true" {
 		data, err := client.Read(path)
 		if err != nil {
 			ctx.String(http.StatusOK, err.Error())
 			return
 		}
-		ctx.DataFromReader(http.StatusOK, int64(detail.Size), detail.Name, data, map[string]string{
-			"Content-Disposition": "attachment; filename=" + detail.Name,
+		ctx.DataFromReader(http.StatusOK, 0, filepath.Base(path), data, map[string]string{
+			"Content-Disposition": "attachment; filename=" + filepath.Base(path),
 		})
 		return
 	}

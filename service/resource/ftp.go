@@ -57,22 +57,16 @@ func (d *FTPDriver) connect() (*ftp.ServerConn, error) {
 
 // List 列出指定路径下的文件和子目录
 func (d *FTPDriver) List(path string) ([]Entry, error) {
+	fmt.Println(path, d.RelativeDir)
 	// 建立FTP连接
 	conn, err := d.connect()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Quit()
-
-	// 切换到指定路径
-	if path != "" && path != "." {
-		if err := conn.ChangeDir(path); err != nil {
-			return nil, err
-		}
-	}
-
+	fmt.Println(path)
 	// 列出文件和目录
-	entries, err := conn.List("")
+	entries, err := conn.List(path)
 	if err != nil {
 		return nil, err
 	}
@@ -176,64 +170,6 @@ func (d *FTPDriver) Write(path string, data io.Reader) error {
 	return conn.Stor(path, data)
 }
 
-// Detail 获取指定路径的详细信息
-func (d *FTPDriver) Detail(path string) (Entry, error) {
-	// 建立FTP连接
-	conn, err := d.connect()
-	if err != nil {
-		return Entry{}, err
-	}
-	defer conn.Quit()
-
-	// 检查路径是文件还是目录
-	// 尝试切换到路径（如果是目录）
-	if err := conn.ChangeDir(path); err == nil {
-		// 是目录，获取目录信息
-		// 切换回原目录
-		conn.ChangeDir("-")
-
-		// 获取目录名称
-		name := filepath.Base(path)
-		if name == "." || name == "" {
-			currentDir, _ := conn.CurrentDir()
-			name = filepath.Base(currentDir)
-		}
-
-		return Entry{
-			Name:       name,
-			Size:       0,
-			Type:       "dir",
-			ModifyTime: time.Now().Unix(), // FTP目录通常没有修改时间
-		}, nil
-	}
-
-	// 不是目录，尝试获取文件信息
-	entries, err := conn.List(path)
-	if err != nil {
-		return Entry{}, err
-	}
-
-	// 查找匹配的文件条目
-	for _, entry := range entries {
-		if entry.Name == filepath.Base(path) {
-			entryType := "file"
-			if entry.Type == ftp.EntryTypeFolder {
-				entryType = "dir"
-			}
-
-			return Entry{
-				Name:       entry.Name,
-				Size:       int64(entry.Size),
-				Type:       entryType,
-				ModifyTime: entry.Time.Unix(),
-			}, nil
-		}
-	}
-
-	// 如果没有找到条目
-	return Entry{}, fmt.Errorf("file or directory not found: %s", path)
-}
-
 // Delete 删除指定路径的文件或目录
 func (d *FTPDriver) Delete(path string) error {
 	// 建立FTP连接
@@ -257,4 +193,17 @@ func (d *FTPDriver) Delete(path string) error {
 
 	// 无法确定是文件还是目录，或者删除失败
 	return fmt.Errorf("failed to delete %s", path)
+}
+
+// MkdirAll 递归创建目录结构
+func (d *FTPDriver) MkdirAll(path string) error {
+	// 建立FTP连接
+	conn, err := d.connect()
+	if err != nil {
+		return err
+	}
+	defer conn.Quit()
+
+	// 使用现有的makeDirAll方法创建目录结构
+	return d.makeDirAll(conn, path)
 }

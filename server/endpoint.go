@@ -20,8 +20,8 @@ func Run(config *container.AppConfig) error {
 		router.Use(gin.BasicAuth(gin.Accounts(toGinAccounts(config.User))))
 	}
 	router.GET("/:name/*path", api.Get)
-	//router.POST("/upload/:name/*path", api.Upload)
 	router.POST("/:name/*path", api.Upload)
+	router.PUT("/:name/*path", api.Upload)
 	router.DELETE("/:name/*path", api.Delete)
 	router.NoRoute(api.Home)
 	return router.Run(fmt.Sprintf(":%d", config.Port))

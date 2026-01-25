@@ -80,30 +80,6 @@ func (d *LocalDriver) Write(path string, data io.Reader) error {
 	return nil
 }
 
-// Detail 获取指定路径的详细信息
-func (d *LocalDriver) Detail(path string) (Entry, error) {
-	fullPath := filepath.Join(d.RootDir, path)
-	info, err := os.Stat(fullPath)
-	if err != nil {
-		return Entry{}, err
-	}
-
-	entryType := "file"
-	if info.IsDir() {
-		entryType = "dir"
-	}
-
-	// 获取文件名（如果是完整路径）
-	name := filepath.Base(fullPath)
-
-	return Entry{
-		Name:       name,
-		Size:       info.Size(),
-		Type:       entryType,
-		ModifyTime: info.ModTime().Unix(),
-	}, nil
-}
-
 // Delete 删除指定路径的文件或目录
 func (d *LocalDriver) Delete(path string) error {
 	fullPath := filepath.Join(d.RootDir, path)
@@ -121,4 +97,10 @@ func (d *LocalDriver) Delete(path string) error {
 		// 删除文件
 		return os.Remove(fullPath)
 	}
+}
+
+// MkdirAll 递归创建目录结构
+func (d *LocalDriver) MkdirAll(path string) error {
+	fullPath := filepath.Join(d.RootDir, path)
+	return os.MkdirAll(fullPath, 0755)
 }

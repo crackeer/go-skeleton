@@ -130,42 +130,28 @@ func (d *S3Driver) Write(path string, data io.Reader) error {
 	return nil
 }
 
-// Detail 获取指定对象的详细信息
-func (d *S3Driver) Detail(path string) (Entry, error) {
-	// 获取对象元数据
-	resp, err := d.Client.HeadObject(context.Background(), &s3.HeadObjectInput{
-		Bucket: aws.String(d.Bucket),
-		Key:    aws.String(path),
-	})
-	if err != nil {
-		return Entry{}, err
-	}
-
-	// 获取对象名称
-	name := filepath.Base(path)
-
-	// 确定对象类型
-	entryType := "file"
-	// 如果路径以斜杠结尾，或者大小为0且没有Content-Type，可能是目录
-	isZeroSize := resp.ContentLength != nil && *resp.ContentLength == 0
-	if strings.HasSuffix(path, "/") || (isZeroSize && resp.ContentType == nil) {
-		entryType = "dir"
-	}
-
-	return Entry{
-		Name:       name,
-		Size:       *resp.ContentLength,
-		Type:       entryType,
-		ModifyTime: resp.LastModified.Unix(),
-	}, nil
-}
-
 // Delete 删除指定路径的对象
 func (d *S3Driver) Delete(path string) error {
 	// 如果是文件，直接删除
 	_, err := d.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 		Bucket: aws.String(d.Bucket),
 		Key:    aws.String(path),
+	})
+	return err
+}
+
+// MkdirAll 递归创建目录结构
+func (d *S3Driver) MkdirAll(path string) error {
+	// 确保路径以斜杠结尾
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+
+	// 创建空对象作为目录
+	_, err := d.Client.PutObject(context.Background(), &s3.PutObjectInput{
+		Bucket: aws.String(d.Bucket),
+		Key:    aws.String(path),
+		Body:   strings.NewReader(""),
 	})
 	return err
 }
