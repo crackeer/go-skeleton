@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 10px;
+            padding: 20px;
         }
         table {
             width: 100%;
@@ -83,6 +83,10 @@
     </style>
 </head>
 <body>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>{{ title }}</h1>
+        <a href="/" style="text-decoration: none; color: #0066cc; font-size: 16px; padding: 5px 10px; border: 1px solid #0066cc; border-radius: 4px;">返回首页</a>
+    </div>
     <!-- 顶部导航栏 -->
     <div style="display: flex; justify-content: space-between; align-items: center; ">
         <div>{{ path }}  <small><button onclick="goToParentDirectory()">上一级</button></small></div>
