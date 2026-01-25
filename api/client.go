@@ -33,7 +33,7 @@ func NewResourceClient(config container.DriverConfig) (resource.Resource, error)
 	case "local":
 		rsc, err = resource.NewLocalDriver(config.LocalConfig.Dir)
 	case "s3":
-		rsc, err = resource.NewS3Driver(config.S3Config.Bucket, config.S3Config.Region, config.S3Config.AccessKey, config.S3Config.SecretKey, config.S3Config.Endpoint)
+		rsc, err = resource.NewS3Driver(config.S3Config.AccessKey, config.S3Config.SecretKey, config.S3Config.Bucket, config.S3Config.Endpoint, config.S3Config.Region)
 	case "ftp":
 		rsc, err = resource.NewFTPDriver(config.FTPConfig.Host, int(config.FTPConfig.Port), config.FTPConfig.User, config.FTPConfig.Password, config.FTPConfig.RelativePath)
 	default:
