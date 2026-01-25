@@ -112,9 +112,10 @@
     <!-- 顶部导航栏 -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <div>{{ path }} <small><button onclick="goToParentDirectory()">上一级</button></small></div>
-        <!-- 文件上传和批量删除区域 -->
+        <!-- 文件上传、新建文件夹和批量删除区域 -->
         <div style="display: flex; gap: 10px; align-items: center;">
             <button onclick="batchDelete()" id="batchDeleteBtn" disabled style="cursor: pointer;">批量删除</button>
+            <button onclick="createFolder()" style="cursor: pointer;">新建文件夹</button>
             <input type="file" id="fileInput" style="display: none;" multiple onchange="uploadFiles()">
             <button onclick="document.getElementById('fileInput').click()">上传文件</button>
         </div>
@@ -334,6 +335,77 @@
 
 
 
+        // 新建文件夹功能
+        function createFolder() {
+            // 提示用户输入文件夹名称
+            const folderName = prompt('请输入新文件夹名称:');
+            if (!folderName) {
+                return; // 用户取消输入
+            }
+
+            // 验证文件夹名称
+            if (folderName.includes('/') || folderName.includes('\\')) {
+                alert('文件夹名称不能包含斜杠');
+                return;
+            }
+
+            // 获取当前路径信息
+            const path = window.location.pathname.replace(/\/+$/, '');
+
+            // 构造创建文件夹的URL
+            const createUrl = `${path}/${folderName}`;
+
+            // 显示Loading浮层
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingFiles = document.getElementById('loadingFiles');
+            
+            loadingOverlay.style.display = 'flex';
+            loadingFiles.innerHTML = '';
+            loadingOverlay.querySelector('.loading-title').textContent = '创建文件夹中';
+            
+            // 初始化文件夹的创建状态
+            const folderElement = document.createElement('div');
+            folderElement.className = 'loading-file uploading';
+            folderElement.id = `loading_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            folderElement.innerHTML = `⌛ 等待创建: ${folderName}`;
+            loadingFiles.appendChild(folderElement);
+
+            // 发送POST请求创建文件夹
+            fetch(createUrl, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`创建文件夹失败: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // 更新文件夹状态为成功
+                    const folderId = `loading_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    const folderElement = document.getElementById(folderId);
+                    if (folderElement) {
+                        folderElement.className = 'loading-file success';
+                        folderElement.innerHTML = `✅ 创建成功: ${folderName}`;
+                    }
+                })
+                .catch(error => {
+                    // 更新文件夹状态为失败
+                    const folderId = `loading_${folderName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    const folderElement = document.getElementById(folderId);
+                    if (folderElement) {
+                        folderElement.className = 'loading-file error';
+                        folderElement.innerHTML = `❌ 创建失败: ${folderName} (${error.message})`;
+                    }
+                })
+                .finally(() => {
+                    // 1秒后刷新页面
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                });
+        }
+
         // 文件上传功能
         function uploadFiles() {
             const fileInput = document.getElementById('fileInput');
@@ -376,7 +448,7 @@
                 const fileElement = document.getElementById(fileId);
                 fileElement.innerHTML = `正在上传: ${file.name}`;
                 fetch(uploadUrl, {
-                    method: 'POST',
+                    method: 'PUT', // 将POST改为PUT
                     body: formData
                 })
                     .then(response => {
